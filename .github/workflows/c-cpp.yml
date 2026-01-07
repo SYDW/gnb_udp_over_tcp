@@ -1,0 +1,21 @@
+name: Build on Debian
+on: [push, workflow_dispatch]
+
+jobs:
+  build-debian:
+    runs-on: ubuntu-22.04  # GitHub 只提供 Ubuntu runner，但我们用容器覆盖
+    container:
+      image: debian:bookworm-slim  # 或 debian:bullseye-slim
+    steps:
+      - name: Install deps
+        run: |
+          apt update && apt install -y gcc make git
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          gcc -O2 -Wall -o gnb_udp_over_tcp main.c
+          ./gnb_udp_over_tcp -h || true  # 验证可执行（预期报 usage）
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gnb-udp-over-tcp-debian-${{ matrix.release }}
+          path: gnb_udp_over_tcp
